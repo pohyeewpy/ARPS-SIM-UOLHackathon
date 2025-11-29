@@ -1,6 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function App() {
+
+    // Icons
+    useEffect(() => {
+        const link = document.createElement("link");
+        link.href = "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200";
+        link.rel = "stylesheet";
+        document.head.appendChild(link);
+    },[]);
+
     const [messages, setMessages] = useState([
         {
             role: "bot",
@@ -34,7 +43,7 @@ export default function App() {
             <div className="bg-green-300 h-20 px-6 flex items-center gap-3 shadow-sm">
                 {/* Logo */}
                 <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow">
-                    <span className="text-green-700 font-bold text-xl">placeholder logo</span>
+                    <span className="text-green-700 font-bold text-xl"></span>
                 </div>
 
                 {/* Title */}
@@ -99,7 +108,7 @@ export default function App() {
             </div>
 
             {/* DISCLAIMER */}
-            <p className="text-center text-gray-500 text-xs px-8 pb-4">
+            <p className="text-center text-gray-500 text-xs px-6 pb-4">
                 This chatbot provides educational information only and is not medical advice.
                 Always consult healthcare professionals for medical advice.
             </p>
