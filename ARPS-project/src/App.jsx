@@ -18,24 +18,55 @@ export default function App() {
     ]);
 
     const [input, setInput] = useState("");
+    
+    // CallBackend for chat reply
 
-    const sendMessage = () => {
+    async function callBackend(userMessage) {
+        const response = await fetch("http://localhost:5000/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                message: userMessage,
+                topic: "general"
+            })
+        });
+
+        const data = await response.json();
+        return data.reply;     
+    }
+    
+    const sendMessage = async() => {
         if (!input.trim()) return;
-
+        const userMsg = input;
         // add user message
         setMessages((prev) => [...prev, { role: "user", text: input }]);
-
+       
         setInput("");
 
         // placeholder bot reply
         setTimeout(() => {
             setMessages((prev) => [
                 ...prev,
-                { role: "bot", text: "Thanks for your message! (Backend reply coming soon)" }
+                { role: "bot", text: "Typing..." }
             ]);
         }, 800);
-    };
+        try {
+            const botText = await callBackend(userMsg);
 
+            // Remove typing bubble, add bot reply
+            setMessages(prev => [
+                ...prev.slice(0, -1),
+                { role: "bot", text: botText }
+            ]);
+        } catch (err) {
+            console.error("Backend error:", err);
+            setMessages(prev => [
+                ...prev.slice(0, -1),
+                { role: "bot", text: "System error, pleaee try again later." }
+
+            ]);
+    }
+};
     return (
         <div className="w-full h-screen bg-gray-100 flex flex-col">
 
