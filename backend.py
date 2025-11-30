@@ -9,6 +9,7 @@ Fully dynamic nutrition chatbot using SEA-LION (via Ollama).
 - STRICT JSON output for React compatibility
 - Follows hackathon rules: science-based, personalized, debunk myths
 """
+from dotenv import load_dotenv
 
 import os
 import json
@@ -18,20 +19,16 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 
-# === OLLAMA CONFIG ==============================================
-# Every network parameter is centralized here so deployments can override
-# behavior through environment variables without touching the code.
-
-OLLAMA_CHAT_URL = os.getenv(
-    "OLLAMA_CHAT_URL",
-    "http://localhost:11434/v1/chat/completions",
-)
-
+# === SEA-LION CLOUD CONFIG ==============================================
+SEALION_API_URL = "https://api.sea-lion.ai/v1/chat/completions"
+SEALION_API_KEY = os.getenv("SEALION_API_KEY") 
 SEALION_MODEL = os.getenv(
     "SEALION_MODEL",
-    "aisingapore/Gemma-SEA-LION-v3-9B-IT:q4_k_m"
+    "aisingapore/Gemma-SEA-LION-v4-27B-IT"
 )
 
+if not SEALION_API_KEY:
+    print("ERROR: SEALION_API_KEY is missing from .env")
 
 # === FLASK APP ==================================================
 # Single Flask instance with CORS enabled to allow the Vite dev server
@@ -85,11 +82,15 @@ def call_sealion(messages: List[Dict[str, str]]) -> str:
     payload = {
         "model": SEALION_MODEL,
         "messages": messages,
-        "temperature": 0.5,
-        "max_tokens": 250
+        "max_tokens": 350
     }
 
-    response = requests.post(OLLAMA_CHAT_URL, json=payload)
+    headers = {
+        "Authorization": f"Bearer {SEALION_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(SEALION_API_URL, headers=headers, json=payload)
     response.raise_for_status()
 
     return response.json()["choices"][0]["message"]["content"]
@@ -136,10 +137,10 @@ def chat():
     # Pull the payload safely and sanitize obvious edge cases.
     data = request.get_json(force=True) or {}
     message = str(data.get("message", "")).strip()
-    topic = data.get("topic")
+    topic = data.get("topic", "general")
 
     if not message:
-        return jsonify({"error": "Message is required"}), 400
+        return jsonify({"error": "message is required"}), 400
 
     system_prompt = build_system_prompt(topic)
 
