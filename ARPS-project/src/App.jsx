@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 export default function App() {
 
-    // Icons
+    // Icons font
     useEffect(() => {
         const link = document.createElement("link");
         link.href = "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200";
@@ -22,12 +22,13 @@ export default function App() {
     const sendMessage = () => {
         if (!input.trim()) return;
 
-        // add user message
+        // Add user message
         setMessages((prev) => [...prev, { role: "user", text: input }]);
 
         setInput("");
 
-        // placeholder bot reply
+
+        // Placeholder bot reply
         setTimeout(() => {
             setMessages((prev) => [
                 ...prev,
@@ -39,11 +40,15 @@ export default function App() {
     return (
         <div className="w-full h-screen bg-gray-100 flex flex-col">
 
-            {/* HEADER */}
+            {/* Header */}
             <div className="bg-green-300 h-20 px-6 flex items-center gap-3 shadow-sm">
                 {/* Logo */}
                 <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow">
-                    <span className="text-green-700 font-bold text-xl"></span>
+                    <img
+                        src="/vite.svg"
+                        alt="User"
+                        className="w-6 h-6 object-contain"
+                    />
                 </div>
 
                 {/* Title */}
@@ -55,10 +60,24 @@ export default function App() {
                 </div>
             </div>
 
-            {/* CHAT AREA */}
+            {/* Chatbox Area */}
             <div className="flex-1 overflow-y-auto px-6 py-4 bg-gray-50">
                 {messages.map((msg, index) => (
-                    <div key={index} className={`flex mb-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div key={index} className={`flex mb-4 gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+
+                        {/* Icon */}
+                        {/* Bot left icon alignment and image link */}
+                        {msg.role === "bot" && (
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 bg-green-500">
+                                <img
+                                    src="/vite.svg"
+                                    alt="Bot"
+                                    className="w-6 h-6 object-contain"
+                                />
+                            </div>
+                        )}
+
+                        {/* Message box */}
                         <div
                             className={`max-w-[75%] p-4 rounded-2xl shadow-sm ${
                                 msg.role === "bot"
@@ -68,11 +87,24 @@ export default function App() {
                         >
                             {msg.text}
                         </div>
+
+
+                        {/* User right icon alignment and image link */}
+                        {msg.role === "user" && (
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 bg-green-700">
+                                <img
+                                    src="/vite.svg"
+                                    alt="User"
+                                    className="w-6 h-6 object-contain"
+                                />
+                            </div>
+                        )}
+
                     </div>
                 ))}
             </div>
 
-            {/* QUICK ACTION BUTTONS */}
+            {/* Quick Action Box */}
             <div className="px-6 py-2 flex gap-4 justify-center flex-wrap">
                 <button className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
                     Healthy Meal Ideas
@@ -87,9 +119,9 @@ export default function App() {
                 </button>
             </div>
 
-            <hr className="opacity-40" />
+            <hr className="border-gray-300" />
 
-            {/* INPUT BAR */}
+            {/* Input bar */}
             <div className="px-6 py-4 flex items-center gap-3">
                 <input
                     className="flex-1 px-4 py-3 bg-white border rounded-xl shadow-sm focus:outline-green-600"
@@ -101,13 +133,14 @@ export default function App() {
 
                 <button
                     onClick={sendMessage}
-                    className="bg-green-400 hover:bg-green-500 px-5 py-3 text-white rounded-xl font-semibold shadow"
+                    className="bg-green-400 hover:bg-green-500 px-6 py-3 text-white rounded-xl font-semibold shadow-md transition-colors flex items-center gap-2"
                 >
-                    Send ➤
+                    <span className="material-symbols-outlined">send</span>
+                    Send
                 </button>
             </div>
 
-            {/* DISCLAIMER */}
+            {/* Disclaimer */}
             <p className="text-center text-gray-500 text-xs px-6 pb-4">
                 This chatbot provides educational information only and is not medical advice.
                 Always consult healthcare professionals for medical advice.
