@@ -21,13 +21,13 @@ export default function App() {
     
     // CallBackend for chat reply
 
-    async function callBackend(userMessage) {
+    async function callBackend(userMessage, topic = "general") {
         const response = await fetch("http://localhost:5000/api/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 message: userMessage,
-                topic: "general"
+                topic: topic
             })
         });
 
@@ -67,6 +67,27 @@ export default function App() {
             ]);
     }
 };
+
+    // QUICK ACTION BUTTON FUNCTION
+    const quickAsk = async (presetMsg, topic) => {
+        // show user message
+        setMessages(prev => [...prev, { role: "user", text: presetMsg }]);
+        // show typing
+        setMessages(prev => [...prev, { role: "bot", text: "Typing..." }]);
+        try {
+            const botText = await callBackend(presetMsg, topic);
+            setMessages(prev => [
+                ...prev.slice(0, -1),
+                { role: "bot", text: botText }
+            ]);
+        } catch {
+            setMessages(prev => [
+                ...prev.slice(0, -1),
+                { role: "bot", text: "System error, please try again later." }
+            ]);
+        }
+    };
+
     return (
         <div className="w-full h-screen bg-gray-100 flex flex-col">
 
@@ -105,15 +126,15 @@ export default function App() {
 
             {/* QUICK ACTION BUTTONS */}
             <div className="px-6 py-2 flex gap-4 justify-center flex-wrap">
-                <button className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
+                <button onClick={() => quickAsk("Give me healthy meal ideas", "healthy")} className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
                     Healthy Meal Ideas
                 </button>
 
-                <button className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
+                <button onClick={() => quickAsk("Give me high protein meal ideas", "protein")} className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
                     Protein Ideas
                 </button>
 
-                <button className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
+                <button onClick={() => quickAsk("Give me fat loss friendly meals ideas", "fat_loss")} className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
                     Fat Loss Meals Ideas
                 </button>
             </div>
