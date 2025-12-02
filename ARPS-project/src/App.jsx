@@ -18,6 +18,65 @@ function normalizeAIText(text) {
         .replace(/\s{2,}/g, " ")            
         .trim();
 }
+
+function formatMealsSmart(text) {
+    if (!text) return text;
+
+    // Remove stray markdown
+    let t = text.replace(/\*\*/g, "").replace(/\*/g, "").trim();
+
+    const headers = ["Breakfast", "Lunch", "Dinner", "Snack"];
+    let sections = {};
+    let introText = "";
+    let foundAnyHeader = false;
+
+    let parts = t.split(/(?=(Breakfast|Lunch|Dinner|Snack):)/gi);
+
+    if (parts.length === 1) {
+        parts = t.split(/[\n\.]+/).map(s => s.trim());
+    }
+
+    for (let rawPart of parts) {
+        let part = rawPart.trim();
+        if (!part) continue;
+
+        let header = headers.find(h =>
+            part.toLowerCase().startsWith(h.toLowerCase())
+        );
+
+        if (!header) {
+            header = headers.find(h =>
+                part.toLowerCase().includes(h.toLowerCase() + ":")
+            );
+        }
+
+        if (header) {
+            foundAnyHeader = true;
+
+            let content = part.split(/:/).slice(1).join(":").trim();
+            sections[header] = (sections[header] || "") + " " + content;
+
+        } else {
+            if (!foundAnyHeader) {
+                introText += part + " ";
+            }
+        }
+    }
+
+    if (!foundAnyHeader) return text;
+
+    let result = introText.trim() ? introText.trim() + "\n\n" : "";
+    const order = ["Breakfast", "Lunch", "Dinner", "Snack"];
+
+    for (let h of order) {
+        if (sections[h]) {
+            result += `**${h}:**\n- ${sections[h].trim()}\n\n`;
+        }
+    }
+
+    return result.trim();
+}
+
 export default function App() {
 
     // Icons
@@ -31,7 +90,7 @@ export default function App() {
     const [messages, setMessages] = useState([
         {
             role: "bot",
-            text: "Hello! I'm your nutrition buddy. I can help you with nutritional information, meal planning and food choices based on scientific research 😊"
+            text: "Hello! I'm your nutrition buddy. I can help you with nutritional information, meal planning and food choices based on scientific research 😊",quickReplies: []
         }
     ]);
 
@@ -50,7 +109,7 @@ export default function App() {
         });
 
         const data = await response.json();
-        return data.reply;     
+        return data;     
     }
     
     const sendMessage = async() => {
@@ -65,7 +124,7 @@ export default function App() {
         setTimeout(() => {
             setMessages((prev) => [
                 ...prev,
-                { role: "bot", text: "Typing..." }
+                { role: "bot", text: "Typing...",  quickReplies: [] }
             ]);
         }, 800);
         try {
@@ -74,14 +133,14 @@ export default function App() {
             // Remove typing bubble, add bot reply
             setMessages(prev => [
                 ...prev.slice(0, -1),
-                { role: "bot", text: botText }
+                { role: "bot", text: botText.reply, quickReplies: botText.quickReplies || [], topic: botText.topic
+                } 
             ]);
         } catch (err) {
             console.error("Backend error:", err);
             setMessages(prev => [
                 ...prev.slice(0, -1),
-                { role: "bot", text: "System error, pleaee try again later." }
-
+                { role: "bot", text: "System error, pleaee try again later." , quickReplies: [] }
             ]);
     }
 };
@@ -91,17 +150,18 @@ export default function App() {
         // show user message
         setMessages(prev => [...prev, { role: "user", text: presetMsg }]);
         // show typing
-        setMessages(prev => [...prev, { role: "bot", text: "Typing..." }]);
+        setMessages(prev => [...prev, { role: "bot", text: "Typing...", quickReplies: [] }]);
         try {
             const botText = await callBackend(presetMsg, topic);
             setMessages(prev => [
                 ...prev.slice(0, -1),
-                { role: "bot", text: botText }
+                { role: "bot", text: botText.reply, quickReplies: botText.quickReplies || [], topic: botText.topic
+                }
             ]);
         } catch {
             setMessages(prev => [
                 ...prev.slice(0, -1),
-                { role: "bot", text: "System error, please try again later." }
+                { role: "bot", text: "System error, please try again later.", quickReplies: [] }
             ]);
         }
     };
@@ -154,9 +214,40 @@ export default function App() {
                                     : "bg-green-200 text-gray-900"
                             }`}
                         >
-                            {msg.text}
-                        </div>
+                        {/* Fixed formatting*/}
+                        <div
+                            className="prose prose-sm"
+                            dangerouslySetInnerHTML={{
+                                __html: (() => {
+                                    let cleaned = normalizeAIText(msg.text || "");
 
+                                    let hasMealHeaders =
+                                        /(breakfast|lunch|dinner|snack)\s*:/i.test(cleaned);
+
+                                    let finalText = hasMealHeaders
+                                        ? formatMealsSmart(cleaned)
+                                        : cleaned;
+
+                                    return marked(finalText);
+                                })()
+                            }}
+                        />
+
+                        {/* QUICK REPLY BUTTONS */}
+                        {msg.quickReplies?.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                                {msg.quickReplies.map((qr, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => quickAsk(qr, msg.topic)}
+                                        className="px-4 py-2 bg-gray-200 rounded-full text-gray-700 shadow hover:bg-gray-300"
+                                    >
+                                        {qr}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>    
 
                         {/* User right icon alignment and image link */}
                         {msg.role === "user" && (
@@ -172,6 +263,7 @@ export default function App() {
                     </div>
                 ))}
             </div>
+            
 
             {/* QUICK ACTION BUTTONS */}
             <div className="px-6 py-2 flex gap-4 justify-center flex-wrap">
@@ -210,7 +302,7 @@ export default function App() {
 
             {/* DISCLAIMER */}
             <p className="text-center text-gray-500 text-xs px-6 pb-4">
-                This cbhatbot provides educational information only and is not medical advice.
+                This chatbot provides educational information only and is not medical advice.
                 Always consult healthcare professionals for medical advice.
             </p>
 
