@@ -95,8 +95,12 @@ export default function App() {
             <div className="bg-green-300 h-20 px-6 flex items-center gap-3 shadow-sm">
                 {/* Logo */}
                 <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow">
-                    <span className="text-green-700 font-bold text-xl"></span>
-                </div>
+                    <img
+                        src="/vite.svg"
+                        alt="User"
+                        className="w-6 h-6 object-contain"
+                    />
+               </div>
 
                 {/* Title */}
                 <div className="flex flex-col">
@@ -110,8 +114,22 @@ export default function App() {
             {/* CHAT AREA */}
             <div className="flex-1 overflow-y-auto px-6 py-4 bg-gray-50">
                 {messages.map((msg, index) => (
-                    <div key={index} className={`flex mb-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                        <div
+                    <div key={index} className={`flex mb-4 gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+
+                        {/* Icon */}
+                        {/* Bot left icon alignment and image link */}
+                        {msg.role === "bot" && (
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 bg-green-500">
+                                <img
+                                    src="/vite.svg"
+                                    alt="Bot"
+                                    className="w-6 h-6 object-contain"
+                                />
+                            </div>
+                        )}
+
+                        {/* Message box */}
+                       <div
                             className={`max-w-[75%] p-4 rounded-2xl shadow-sm ${
                                 msg.role === "bot"
                                     ? "bg-white text-gray-800 border"
@@ -120,6 +138,19 @@ export default function App() {
                         >
                             {msg.text}
                         </div>
+
+
+                        {/* User right icon alignment and image link */}
+                        {msg.role === "user" && (
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 bg-green-700">
+                                <img
+                                    src="/vite.svg"
+                                    alt="User"
+                                    className="w-6 h-6 object-contain"
+                                />
+                            </div>
+                        )}
+
                     </div>
                 ))}
             </div>
