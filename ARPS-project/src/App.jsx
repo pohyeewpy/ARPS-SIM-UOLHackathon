@@ -1,5 +1,23 @@
 import { useState, useEffect } from "react";
+import { marked } from "marked";
 
+marked.setOptions({
+    breaks: true,
+    smartLists: true,
+    smartypants: true
+});
+
+// perform text formatting before markdown parsing to show 
+function normalizeAIText(text) {
+    if (!text) return "";
+    return text
+        .replace(/^\* \*\*/gm, "- **")      
+        .replace(/^\* /gm, "- ")            
+        .replace(/\. \* /g, ".\n- ")        
+        .replace(/\n\* /g, "\n- ")          
+        .replace(/\s{2,}/g, " ")            
+        .trim();
+}
 export default function App() {
 
     // Icons
@@ -192,7 +210,7 @@ export default function App() {
 
             {/* DISCLAIMER */}
             <p className="text-center text-gray-500 text-xs px-6 pb-4">
-                This chatbot provides educational information only and is not medical advice.
+                This cbhatbot provides educational information only and is not medical advice.
                 Always consult healthcare professionals for medical advice.
             </p>
 
