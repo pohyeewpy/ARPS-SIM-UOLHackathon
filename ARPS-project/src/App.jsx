@@ -78,7 +78,6 @@ function formatMealsSmart(text) {
     return result.trim();
 }
 
-// ---------------------------------------------------
 export default function App() {
 
     // Icons
@@ -111,6 +110,7 @@ export default function App() {
 
     // User message input state
     const [input, setInput] = useState("");
+
     // Auto scroll to bottom with new message
     const bottomRef = useRef(null);
 
@@ -132,7 +132,7 @@ export default function App() {
 
 
     //--------------------------------------------------------------
-    // CallBackend for chat replApp.y
+    // CallBackend for chat reply
 
     async function callBackend(userMessage, topic = "general") {
         const response = await fetch("http://localhost:5000/api/chat", {
@@ -145,23 +145,22 @@ export default function App() {
         });
 
         const data = await response.json();
-        return data;
+        return data;     
     }
-
+    
     const sendMessage = async() => {
         if (!input.trim()) return;
         const userMsg = input;
-        // Add user message
+        // add user message
         setChats(prev => prev.map(chat =>
             chat.id === currentChatId
                 ? { ...chat, messages: [...chat.messages, {role: "user", text: userMsg}] }
                 : chat
         ));
-
-
+       
         setInput("");
 
-        // Placeholder bot reply
+        // placeholder bot reply
         setTimeout(() => {
             setChats(prev => prev.map(chat =>
                 chat.id === currentChatId
@@ -169,8 +168,7 @@ export default function App() {
                     : chat
 
             ));
-        }, 300);
-
+        }, 800);
         try {
             const botText = await callBackend(userMsg);
 
@@ -192,7 +190,6 @@ export default function App() {
                 }
                 return chat;
             }));
-
         } catch (err) {
             console.error("Backend error:", err);
             setChats(prev => prev.map(chat => {
@@ -210,8 +207,6 @@ export default function App() {
         }
     };
 
-
-    // -------------------------------------------------------------------
     // QUICK ACTION BUTTON FUNCTION
     const quickAsk = async (presetMsg, topic = "general") => {
         // show user message
@@ -233,18 +228,17 @@ export default function App() {
                     : chat
             ));
         }, 250);
-
         try {
-            const botResponse = await callBackend(presetMsg, topic);
+            const botText = await callBackend(presetMsg, topic);
             setChats(prev => prev.map(chat => {
                 if (chat.id === currentChatId) {
                     return {
                         ...chat,
                         messages: [...chat.messages.slice(0, -1), {
                             role: "bot",
-                            text: botResponse.reply,
-                            quickReplies: botResponse.quickReplies || [],
-                            topic: botResponse.topic
+                            text: botText.reply,
+                            quickReplies: botText.quickReplies || [],
+                            topic: botText.topic
                         }],
                     };
                 }
@@ -295,6 +289,7 @@ export default function App() {
 
     // -------------------------------------------------------------------------------------------------
     // Chat UI
+
     return (
         <div className="flex h-screen bg-gray-100 overflow-hidden">
 
@@ -307,7 +302,7 @@ export default function App() {
                 <div className="h-20 flex items-center justify-between px-4 bg-gray-800 border-b border-gray-700">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                            <img src="/NutriHealthLogo.png" alt="Logo" className="w-7 h-7 object-contain" />
+                            <img src="/NutriHealthLogo.png" alt="Logo" className="w-6 h-6 object-contain" />
                         </div>
                         <div>
                             <h2 className="font-bold">NutriHealth</h2>
@@ -396,8 +391,6 @@ export default function App() {
                     </div>
                 </div>
             </aside>
-
-
             {/* -------------------------------------------------------------------------------------------------------- */}
             {/* MAIN CONTENT */}
             <div className="flex-1 flex flex-col">
@@ -410,8 +403,8 @@ export default function App() {
                     )}
 
                     {/* Logo */}
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow">
-                        <img src="/NutriHealthLogo.png" alt="User" className="w-8 h-8 object-contain" />
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow">
+                        <img src="/NutriHealthLogo.png" alt="User" className="w-7 h-7 object-contain" />
                     </div>
 
                     {/* Title */}
@@ -429,7 +422,7 @@ export default function App() {
                             {/* Icon */}
                             {/* Bot left icon alignment and image link */}
                             {msg.role === "bot" && (
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 bg-green-500">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 bg-gray-300">
                                     <UserRound size={20} color={"white"} />
                                 </div>
                             )}
@@ -479,7 +472,7 @@ export default function App() {
 
                             {/* User right icon alignment and image link */}
                             {msg.role === "user" && (
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 bg-gray-300">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 bg-green-300">
                                     <UserRound size={20} color={"gray"} />
                                 </div>
                             )}
@@ -488,60 +481,52 @@ export default function App() {
 
                     {/* Auto scroller anchor */}
                     <div ref={bottomRef}></div>
-                </main>
+            </main>                    
+            {/* QUICK ACTION BUTTONS */}
+            <div className="px-6 py-2 flex gap-4 justify-center flex-wrap">
+                <button onClick={() => quickAsk("Give me healthy meal ideas", "healthy")} className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
+                    <Salad size={20} />
+                    Healthy Meal Ideas
+                </button>
 
+                <button onClick={() => quickAsk("Give me high protein meal ideas", "protein")} className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
+                    <Drumstick size={20} />                  
+                    Protein Ideas
+                </button>
 
-
-
-
-
-                {/* ================================ */}
-                {/* QUICK ACTION BUTTONS */}
-                <div className="px-6 py-2 flex gap-4 justify-center flex-wrap">
-                    <button onClick={() => quickAsk("Give me healthy meal ideas", "healthy")} className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
-                        <Salad size={20} />
-                        Healthy Meal Ideas
-                    </button>
-
-                    <button onClick={() => quickAsk("Give me high protein meal ideas", "protein")} className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
-                        <Drumstick size={20} />
-                        Protein Ideas
-                    </button>
-
-                    <button onClick={() => quickAsk("Give me fat loss friendly meals ideas", "fat_loss")} className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
-                        <HeartPlus size={20} />
-                        Fat Loss Meals Ideas
-                    </button>
-                </div>
-
-                <hr className="opacity-40" />
-
-                {/* INPUT BAR */}
-                <div className="px-6 py-4 flex items-center gap-3">
-                    <input
-                        className="flex-1 px-4 py-3 bg-white border rounded-xl shadow-sm focus:outline-green-600"
-                        placeholder="Ask about nutrition, meal ideas, or dietary guidance ..."
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                    />
-
-                    <button
-                        onClick={sendMessage}
-                        className="bg-green-400 hover:bg-green-500 px-5 py-3 text-white rounded-xl font-semibold shadow flex items-center gap-2"
-                    >
-                        <Send size={20} />
-                        Send
-                    </button>
-                </div>
-
-                {/* DISCLAIMER */}
-                <p className="text-center text-gray-500 text-xs px-6 pb-4">
-                    This chatbot provides educational information only and is not medical advice.
-                    Always consult healthcare professionals for medical advice.
-                </p>
+                <button onClick={() => quickAsk("Give me fat loss friendly meals ideas", "fat_loss")} className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
+                    <HeartPlus size={20} />                   
+                    Fat Loss Meals Ideas
+                </button>
             </div>
 
+            <hr className="opacity-40" />
+
+            {/* INPUT BAR */}
+            <div className="px-6 py-4 flex items-center gap-3">
+                <input
+                    className="flex-1 px-4 py-3 bg-white border rounded-xl shadow-sm focus:outline-green-600"
+                    placeholder="Ask about nutrition, meal ideas, or dietary guidance ..."
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                />
+
+                <button
+                    onClick={sendMessage}
+                    className="bg-green-400 hover:bg-green-500 px-5 py-3 text-white rounded-xl font-semibold shadow"
+                >   <Send size={20} />
+                    
+                    Send 
+                </button>
+            </div>
+
+            {/* DISCLAIMER */}
+            <p className="text-center text-gray-500 text-xs px-6 pb-4">
+                This chatbot provides educational information only and is not medical advice.
+                Always consult healthcare professionals for medical advice.
+            </p>
+            </div>
         </div>
     );
 }
