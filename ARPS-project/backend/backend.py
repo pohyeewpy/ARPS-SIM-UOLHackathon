@@ -23,8 +23,7 @@ import re
 SEALION_API_URL = "https://api.sea-lion.ai/v1/chat/completions"
 SEALION_API_KEY = os.getenv("SEALION_API_KEY") 
 SEALION_MODEL = os.getenv(
-    "SEALION_MODEL",
-    "aisingapore/Gemma-SEA-LION-v4-27B-IT"
+    "SEALION_MODEL"
 )
 
 if not SEALION_API_KEY:
