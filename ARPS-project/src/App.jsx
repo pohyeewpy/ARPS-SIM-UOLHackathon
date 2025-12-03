@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Menu, ChevronLeft, Clock, BookOpen, Plus, MessageSquare, Trash2, Send } from "lucide-react";
+import { Menu, ChevronLeft, Clock, BookOpen, Plus, MessageSquare, Trash2, Send, Salad, Drumstick, HeartPlus, UserRound } from "lucide-react";
 import { marked } from "marked";
 
 marked.setOptions({
@@ -306,8 +306,8 @@ export default function App() {
                 {/* Sidebar Header */}
                 <div className="h-20 flex items-center justify-between px-4 bg-gray-800 border-b border-gray-700">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                            <img src="/vite.svg" alt="Logo" className="w-6 h-6 object-contain" />
+                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                            <img src="/NutriHealthLogo.png" alt="Logo" className="w-7 h-7 object-contain" />
                         </div>
                         <div>
                             <h2 className="font-bold">NutriHealth</h2>
@@ -411,7 +411,7 @@ export default function App() {
 
                     {/* Logo */}
                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow">
-                        <img src="/vite.svg" alt="User" className="w-6 h-6 object-contain" />
+                        <img src="/NutriHealthLogo.png" alt="User" className="w-8 h-8 object-contain" />
                     </div>
 
                     {/* Title */}
@@ -430,11 +430,7 @@ export default function App() {
                             {/* Bot left icon alignment and image link */}
                             {msg.role === "bot" && (
                                 <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 bg-green-500">
-                                    <img
-                                        src="/vite.svg"
-                                        alt="Bot"
-                                        className="w-6 h-6 object-contain"
-                                    />
+                                    <UserRound size={20} color={"white"} />
                                 </div>
                             )}
 
@@ -483,11 +479,8 @@ export default function App() {
 
                             {/* User right icon alignment and image link */}
                             {msg.role === "user" && (
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 bg-green-700">
-                                    <img src="/vite.svg"
-                                        alt="User"
-                                        className="w-6 h-6 object-contain"
-                                    />
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 bg-gray-300">
+                                    <UserRound size={20} color={"gray"} />
                                 </div>
                             )}
                         </div>
@@ -506,14 +499,17 @@ export default function App() {
                 {/* QUICK ACTION BUTTONS */}
                 <div className="px-6 py-2 flex gap-4 justify-center flex-wrap">
                     <button onClick={() => quickAsk("Give me healthy meal ideas", "healthy")} className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
+                        <Salad size={20} />
                         Healthy Meal Ideas
                     </button>
 
                     <button onClick={() => quickAsk("Give me high protein meal ideas", "protein")} className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
+                        <Drumstick size={20} />
                         Protein Ideas
                     </button>
 
                     <button onClick={() => quickAsk("Give me fat loss friendly meals ideas", "fat_loss")} className="flex items-center gap-2 bg-green-200 px-4 py-2 rounded-full text-green-900 shadow-sm hover:bg-green-300">
+                        <HeartPlus size={20} />
                         Fat Loss Meals Ideas
                     </button>
                 </div>
