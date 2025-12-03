@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { marked } from "marked";
 
 marked.setOptions({
@@ -95,8 +95,19 @@ export default function App() {
     ]);
 
     const [input, setInput] = useState("");
+
+
+    // Auto scroll to bottom with new message
+    const bottomRef = useRef(null);
+
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({behavior: "smooth"});
+    }, [messages]);
+
+
+
     
-    // CallBackend for chat reply
+    // CallBackend for chat replApp.y
 
     async function callBackend(userMessage, topic = "general") {
         const response = await fetch("http://localhost:5000/api/chat", {
@@ -115,12 +126,12 @@ export default function App() {
     const sendMessage = async() => {
         if (!input.trim()) return;
         const userMsg = input;
-        // add user message
+        // Add user message
         setMessages((prev) => [...prev, { role: "user", text: input }]);
        
         setInput("");
 
-        // placeholder bot reply
+        // Placeholder bot reply
         setTimeout(() => {
             setMessages((prev) => [
                 ...prev,
@@ -140,7 +151,7 @@ export default function App() {
             console.error("Backend error:", err);
             setMessages(prev => [
                 ...prev.slice(0, -1),
-                { role: "bot", text: "System error, pleaee try again later." , quickReplies: [] }
+                { role: "bot", text: "System error, please try again later." , quickReplies: [] }
             ]);
     }
 };
@@ -189,7 +200,7 @@ export default function App() {
                 </div>
             </div>
 
-            {/* CHAT AREA */}
+            {/* CHAT AREA container */}
             <div className="flex-1 overflow-y-auto px-6 py-4 bg-gray-50">
                 {messages.map((msg, index) => (
                     <div key={index} className={`flex mb-4 gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -233,7 +244,7 @@ export default function App() {
                             }}
                         />
 
-                        {/* QUICK REPLY BUTTONS */}
+                        {/* Quick replies button */}
                         {msg.quickReplies?.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-3">
                                 {msg.quickReplies.map((qr, i) => (
@@ -262,6 +273,9 @@ export default function App() {
 
                     </div>
                 ))}
+
+                {/* Auto scroller anchor */}
+                <div ref={bottomRef}></div>
             </div>
             
 
