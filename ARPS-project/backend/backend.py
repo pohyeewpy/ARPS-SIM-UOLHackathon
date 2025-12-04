@@ -260,7 +260,6 @@ def parse_json(raw: str, fallback_topic: str) -> Dict[str, Any]:
     cleaned = _strip_code_fences(raw)
     if cleaned is None:
         
-        # create a structured response for fallback
         cleaned = {
             "reply": raw.strip() if raw else "How can I help you with your nutrition goals today?",
             "topic": fallback_topic,
@@ -269,7 +268,7 @@ def parse_json(raw: str, fallback_topic: str) -> Dict[str, Any]:
             "memoryUpdate": {}
         }
     
-    # make sure all required fields exist
+    # Required fields
     if "reply" not in cleaned:
         cleaned["reply"] = raw.strip() if raw else "I understand. How can I help you further?"
     
@@ -278,21 +277,23 @@ def parse_json(raw: str, fallback_topic: str) -> Dict[str, Any]:
     
     if "suggestedQuestions" not in cleaned:
         cleaned["suggestedQuestions"] = []
-    
-    if "quickReplies" not in cleaned:
+
+    if "quickReplies" not in cleaned or not cleaned["quickReplies"]:
         cleaned["quickReplies"] = cleaned.get("suggestedQuestions", [])[:3]
-    
+        if not cleaned["quickReplies"]:
+            cleaned["quickReplies"] = ["More ideas", "Protein ideas", "Healthy meals"]
+
     if "memoryUpdate" not in cleaned:
         cleaned["memoryUpdate"] = {}
-    
-    # make sure arrays have at most 3 items
+
+    # Limit arrays to max 3 items
     cleaned["suggestedQuestions"] = cleaned["suggestedQuestions"][:3]
     cleaned["quickReplies"] = cleaned["quickReplies"][:3]
-    
+
     # Clean reply text
     if isinstance(cleaned["reply"], str):
         cleaned["reply"] = cleaned["reply"].strip()
-    
+
     return cleaned
 
 # preprocess user input before sending to the model
