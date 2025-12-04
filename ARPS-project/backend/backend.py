@@ -23,7 +23,8 @@ import re
 SEALION_API_URL = "https://api.sea-lion.ai/v1/chat/completions"
 SEALION_API_KEY = os.getenv("SEALION_API_KEY") 
 SEALION_MODEL = os.getenv(
-    "SEALION_MODEL"
+    "SEALION_MODEL",
+    "aisingapore/Gemma-SEA-LION-v4-27B-IT"
 )
 
 if not SEALION_API_KEY:
@@ -254,7 +255,7 @@ def _strip_code_fences(raw: str) -> str:
     return None
 
 
-def parse_json(raw: str, fallback_topic) :
+def parse_json(raw: str, fallback_topic: str) -> Dict[str, Any]:
     cleaned = _strip_code_fences(raw)
     if cleaned is None:
         
@@ -353,6 +354,9 @@ def chat():
         data = request.get_json(force=True) 
         message = str(data.get("message", "")).strip()
         topic = data.get("topic", "general")
+        
+        # Create fallback_topic variable
+        fallback_topic = topic 
 
         if not message:
             suggestions = generate_suggestions()
@@ -385,7 +389,7 @@ def chat():
         print(f"Model raw response: {raw[:200]}...")
         
         # parse response
-        parsed = parse_json(raw, topic)
+        parsed = parse_json(raw, fallback_topic)
 
         # update memory 
         memory_update = parsed.get("memoryUpdate", {})
