@@ -302,7 +302,7 @@ export default function App() {
                 <div className="h-20 flex items-center justify-between px-4 bg-gray-800 border-b border-gray-700">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                            <img src="/NutriHealthLogo.png" alt="Logo" className="w-6 h-6 object-contain" />
+                            <img src="/NutriHealthLogo.png" alt="Logo" className="w-7 h-7 object-contain" />
                         </div>
                         <div>
                             <h2 className="font-bold">NutriHealth</h2>
@@ -403,8 +403,8 @@ export default function App() {
                     )}
 
                     {/* Logo */}
-                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow">
-                        <img src="/NutriHealthLogo.png" alt="User" className="w-7 h-7 object-contain" />
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow">
+                        <img src="/NutriHealthLogo.png" alt="User" className="w-8 h-8 object-contain" />
                     </div>
 
                     {/* Title */}
@@ -422,7 +422,7 @@ export default function App() {
                             {/* Icon */}
                             {/* Bot left icon alignment and image link */}
                             {msg.role === "bot" && (
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 bg-gray-300">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 bg-green-500">
                                     <UserRound size={20} color={"white"} />
                                 </div>
                             )}
@@ -472,7 +472,7 @@ export default function App() {
 
                             {/* User right icon alignment and image link */}
                             {msg.role === "user" && (
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 bg-green-300">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 bg-gray-300">
                                     <UserRound size={20} color={"gray"} />
                                 </div>
                             )}
@@ -514,9 +514,8 @@ export default function App() {
 
                 <button
                     onClick={sendMessage}
-                    className="bg-green-400 hover:bg-green-500 px-5 py-3 text-white rounded-xl font-semibold shadow"
+                    className="bg-green-400 hover:bg-green-500 px-5 py-3 text-white rounded-xl font-semibold shadow flex items-center gap-2"                
                 >   <Send size={20} />
-                    
                     Send 
                 </button>
             </div>
