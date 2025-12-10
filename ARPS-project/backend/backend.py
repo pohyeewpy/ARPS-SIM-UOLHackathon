@@ -177,6 +177,7 @@ Your required behaviour:
 - Acknowledge what the user said before asking next question
 - If user uses abbreviations, show you understood by paraphrasing
 - Example: User: "dh goal" → You: "I understand you don't have a specific goal yet..."
+15. You are based in Singapore, please give me Singapore related answers and response. 
 
 JSON FORMAT (MANDATORY):
 {{
@@ -197,7 +198,7 @@ Conversation focus: {topic or "general"}.
 # Wrap every model call so logging, payload tweaks, and future auth
 # headers stay in one place.
 
-def call_sealion(messages: List[Dict[str, str]]) -> str:
+def call_sealion(messages: List[Dict[str, str]]) -> Dict[str, Any]:
     payload = {
         "model": SEALION_MODEL,
         "messages": messages,
@@ -213,14 +214,34 @@ def call_sealion(messages: List[Dict[str, str]]) -> str:
     try:
         res = requests.post(SEALION_API_URL, headers=headers, json=payload, timeout=30)
         res.raise_for_status()
-        return res.json()["choices"][0]["message"]["content"]
+        response_data = res.json()
+        
+        # Extract the content from the response
+        content = response_data["choices"][0]["message"]["content"]
+        print(f"Raw model response: {content[:200]}...")
+        
+        # Try to parse it as JSON first
+        try:
+            parsed = json.loads(content)
+            print(f"Successfully parsed as JSON")
+            return parsed
+        except json.JSONDecodeError:
+            print(f"Failed to parse as JSON, treating as plain text")
+            # If it's not JSON, return it as text in the reply field
+            return {
+                "reply": content,
+                "topic": "general",
+                "suggestedQuestions": ["Continue", "More details", "Next step"],
+                "quickReplies": ["More ideas", "Protein ideas", "Healthy meals"],
+                "memoryUpdate": {}
+            }
+            
     except requests.exceptions.RequestException as e:
         print(f"API Request Error: {e}")
         raise
     except KeyError as e:
         print(f"API Response Error: {e}")
         raise
-
 
 # === FALLBACK JSON PARSER ========================================
 # SEA-LION is instructed to return JSON, but models occasionally wrap
@@ -257,16 +278,35 @@ def _strip_code_fences(raw: str) -> str:
 
 
 def parse_json(raw: str, fallback_topic: str) -> Dict[str, Any]:
+    # If raw is already a dict, return it
+    if isinstance(raw, dict):
+        return raw
+        
     cleaned = _strip_code_fences(raw)
     if cleaned is None:
-        
-        cleaned = {
-            "reply": raw.strip() if raw else "How can I help you with your nutrition goals today?",
-            "topic": fallback_topic,
-            "suggestedQuestions": [],
-            "quickReplies": [],
-            "memoryUpdate": {}
-        }
+        # Try to extract JSON from the text
+        try:
+            # Look for JSON pattern
+            import re
+            json_match = re.search(r'\{.*\}', raw, re.DOTALL)
+            if json_match:
+                cleaned = json.loads(json_match.group())
+            else:
+                cleaned = {
+                    "reply": raw.strip() if raw else "How can I help you with your nutrition goals today?",
+                    "topic": fallback_topic,
+                    "suggestedQuestions": [],
+                    "quickReplies": [],
+                    "memoryUpdate": {}
+                }
+        except:
+            cleaned = {
+                "reply": raw.strip() if raw else "How can I help you with your nutrition goals today?",
+                "topic": fallback_topic,
+                "suggestedQuestions": [],
+                "quickReplies": [],
+                "memoryUpdate": {}
+            }
     
     # Required fields
     if "reply" not in cleaned:
@@ -290,12 +330,16 @@ def parse_json(raw: str, fallback_topic: str) -> Dict[str, Any]:
     cleaned["suggestedQuestions"] = cleaned["suggestedQuestions"][:3]
     cleaned["quickReplies"] = cleaned["quickReplies"][:3]
 
-    # Clean reply text
-    if isinstance(cleaned["reply"], str):
-        cleaned["reply"] = cleaned["reply"].strip()
+    # Clean reply text - ensure it's a string
+    if isinstance(cleaned["reply"], dict):
+        # If reply is somehow a dict, convert to string
+        cleaned["reply"] = json.dumps(cleaned["reply"])
+    elif not isinstance(cleaned["reply"], str):
+        cleaned["reply"] = str(cleaned["reply"])
+    
+    cleaned["reply"] = cleaned["reply"].strip()
 
     return cleaned
-
 # preprocess user input before sending to the model
 def preprocess_user_input(text):
     if not text or not isinstance(text, str):
@@ -348,16 +392,16 @@ def generate_suggestions():
 # /api/chat handles user prompts. /api/health is a lightweight probe.
 
 @app.route("/api/chat", methods=["POST"])
+@app.route("/api/chat", methods=["POST"])
+@app.route("/api/chat", methods=["POST"])
 def chat():
     global conversation_memory, user_state
 
     try:
-    # Pull the payload safely and sanitize obvious edge cases.
         data = request.get_json(force=True) 
         message = str(data.get("message", "")).strip()
         topic = data.get("topic", "general")
         
-        # Create fallback_topic variable
         fallback_topic = topic 
 
         if not message:
@@ -370,57 +414,97 @@ def chat():
                 "memoryUpdate": {}
             })
         
-        # preprocess user input 
         processed_message = preprocess_user_input(message)
         print(f"User input: '{message}' → Processed: '{processed_message}'")
         
-        # add original and processed messages to memory
         conversation_memory.append({"role": "user", "content": processed_message})
         conversation_memory = conversation_memory[-20:]        
         
         system_prompt = build_system_prompt(topic)
 
-        # SEA-LION expects an OpenAI-style conversation array.
         messages = [
             {"role": "system", "content": system_prompt},
             *conversation_memory[-5:]
         ]
 
-        # call model
-        raw = call_sealion(messages)
-        print(f"Model raw response: {raw[:200]}...")
+        # Get response from model
+        parsed_response = call_sealion(messages)
+        print(f"Model response type: {type(parsed_response)}")
         
-        # parse response
-        parsed = parse_json(raw, fallback_topic)
-
-        # update memory 
-        memory_update = parsed.get("memoryUpdate", {})
-        update_user_state_from_memory(memory_update)
-        conversation_memory.append({"role": "assistant", "content": parsed["reply"]})
+        # Ensure parsed_response is a dictionary
+        if not isinstance(parsed_response, dict):
+            print(f"Warning: parsed_response is not a dict: {parsed_response}")
+            parsed_response = {
+                "reply": str(parsed_response) if parsed_response else "I understand. How can I help you further?",
+                "topic": fallback_topic,
+                "suggestedQuestions": [],
+                "quickReplies": [],
+                "memoryUpdate": {}
+            }
+        
+        # Create a clean response dict with all required fields
+        response_dict = {
+            "reply": parsed_response.get("reply", "I understand. How can I help you further?"),
+            "topic": parsed_response.get("topic", fallback_topic),
+            "suggestedQuestions": parsed_response.get("suggestedQuestions", [])[:3],
+            "quickReplies": parsed_response.get("quickReplies", [])[:3],
+            "memoryUpdate": parsed_response.get("memoryUpdate", {})
+        }
+        
+        # Ensure quickReplies has at least 3 items if empty
+        if not response_dict["quickReplies"]:
+            response_dict["quickReplies"] = response_dict.get("suggestedQuestions", [])[:3]
+            if not response_dict["quickReplies"]:
+                response_dict["quickReplies"] = ["More ideas", "Protein ideas", "Healthy meals"]
+        
+        # Clean the reply text - ensure it's a proper string
+        reply_text = response_dict["reply"]
+        if not isinstance(reply_text, str):
+            reply_text = str(reply_text)
+        
+        # Remove any JSON wrapper if it exists
+        if reply_text.strip().startswith('{') and '"reply"' in reply_text:
+            try:
+                import re
+                # Try to extract just the reply text from JSON string
+                match = re.search(r'"reply"\s*:\s*"([^"]+)"', reply_text, re.DOTALL)
+                if match:
+                    extracted = match.group(1)
+                    # Unescape newlines and other characters
+                    extracted = extracted.replace('\\n', '\n').replace('\\"', '"')
+                    reply_text = extracted
+            except Exception as e:
+                print(f"Failed to extract reply from JSON: {e}")
+        
+        response_dict["reply"] = reply_text.strip()
+        
+        # Update memory if needed
+        memory_update = response_dict.get("memoryUpdate", {})
+        if memory_update:
+            update_user_state_from_memory(memory_update)
+        
+        # Add to conversation memory
+        conversation_memory.append({"role": "assistant", "content": response_dict["reply"]})
         conversation_memory = conversation_memory[-20:]
 
-        return jsonify(parsed)            
-    except json.JSONDecodeError as e:
-        # On failure we avoid surfacing internals to the client.
-        suggestions = generate_suggestions()
-        return jsonify({
-            "reply": "I apologise, but I'm having trouble processing that. Could you please rephrase or try using the quick reply options below?",
-            "topic": "error",
-            "suggestedQuestions": ["Let's try again", "Start over", "Help me with nutrition"],
-            "quickReplies": suggestions,
-            "memoryUpdate": {}
-        })
+        print(f"Returning response: {response_dict['reply'][:100]}...")
+        return jsonify(response_dict)
+            
     except Exception as e:
-        print(f"General Error: {e}")
+        print(f"General Error in chat endpoint: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        # Always return valid JSON even on error
         suggestions = generate_suggestions()
         return jsonify({
-            "reply": "I'm experiencing some technical difficulties. Please try again in a moment.",
+            "reply": "I apologize for the technical issue. Please try again or use one of the quick options below.",
             "topic": "error",
-            "suggestedQuestions": ["Try again", "Health tips", "Contact support"],
+            "suggestedQuestions": ["Try again", "Help me with nutrition", "Contact support"],
             "quickReplies": suggestions,
             "memoryUpdate": {}
         })
-
+        
 @app.route("/api/health", methods=["GET"])
 def health():
     # Basic readiness endpoint for render hosts and manual checks.

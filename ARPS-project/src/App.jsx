@@ -442,6 +442,7 @@ export default function App() {
                                 dangerouslySetInnerHTML={{
                                     __html: (() => {
                                         let cleaned = normalizeAIText(msg.text || "");
+
                                         let hasMealHeaders =
                                             /(breakfast|lunch|dinner|snack)\s*:/i.test(cleaned);
 
